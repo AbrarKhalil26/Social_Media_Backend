@@ -1,13 +1,4 @@
-import { Types } from "mongoose";
-import { GenderEnum, RoleEnum } from "../../common/enum/user.enum";
+import * as z from "zod";
+import { signUpSchema } from "./auth.validation";
 
-export interface SignupRequestBody {
-  userName: string;
-  email: string;
-  password: string;
-  cPassword: string;
-  age: number;
-  phone?: string;
-  address?: string;
-  gender?: GenderEnum;
-}
+export type SignupRequestBody = z.infer<typeof signUpSchema.body>;

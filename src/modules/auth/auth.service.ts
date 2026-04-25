@@ -8,19 +8,31 @@ import { encrypt } from "../../common/utils/security/encrypt.security";
 import { Compare, Hash } from "../../common/utils/security/hash";
 import { generateOTP, sendEmail } from "../../common/utils/email/send.email";
 import { emailTemplate } from "../../common/utils/email/email.template";
-import RedisRepository, { Keys } from "../../DB/repositories/redis.repository";
-import { emailEnum, EmailSubject } from "../../common/enum/email.enum";
+import { EmailEnum } from "../../common/enum/email.enum";
 import { eventEmitter } from "../../common/utils/email/email.events";
 import { GenerateToken } from "../../common/utils/token.service";
+import { OAuth2Client } from "google-auth-library";
 import {
   ACCESS_SECRET_KEY,
+  CLIENT_ID,
   REFRESH_SECRET_KEY,
+  SECRET_KEY,
 } from "../../config/config.service";
 import { randomUUID } from "crypto";
+import { successResponse } from "../../common/utils/response.success";
+import { ProviderEnum } from "../../common/enum/user.enum";
+import redisService from "../../common/service/redis.service";
+
+type TokenPayload = {
+  email: string;
+  email_verified: boolean;
+  name: string;
+  picture: string;
+};
 
 class UserService {
   private readonly _userModel = new UserRepository();
-  private readonly _redis = new RedisRepository();
+  private readonly _redisService = redisService;
 
   constructor() {}
   // -------------------------------------------------------------
@@ -29,13 +41,15 @@ class UserService {
   sendEmailOtp = async ({
     email,
     userName,
-    subject = emailEnum.confirmEmail,
+    subject = EmailEnum.confirmEmail,
   }: {
     email: string;
     userName: string;
-    subject?: EmailSubject;
+    subject?: string;
   }) => {
-    await this._redis.delValue(Keys.otp({ email, subject }));
+    await this._redisService.delValue(
+      this._redisService.otp_key({ email, subject }),
+    );
     const otp = await generateOTP();
     eventEmitter.emit(subject, async () => {
       await sendEmail({
@@ -43,9 +57,14 @@ class UserService {
         subject: "Email Confirmation",
         html: emailTemplate({ userName: userName, otp }),
       });
-      await this._redis.setValue({
-        key: Keys.otp({ email, subject }),
+      await this._redisService.setValue({
+        key: this._redisService.otp_key({ email, subject }),
         value: Hash({ plainText: `${otp}` }),
+      });
+      await this._redisService.setValue({
+        key: this._redisService.max_otp_key(email),
+        value: "1",
+        ttl: 60 * 30,
       });
     });
   };
@@ -55,7 +74,8 @@ class UserService {
   // -------------------------------------------------------------
   signUp = async (req: Request, res: Response, next: NextFunction) => {
     const {
-      userName,
+      firstName,
+      lastName,
       email,
       password,
       age,
@@ -64,10 +84,11 @@ class UserService {
       phone,
     }: SignupRequestBody = req.body;
 
-    const emailExist = await this._userModel.findOne({ filter: { email } });
-    if (emailExist) throw new AppError("Email already exist", 409);
+    if (await this._userModel.findOne({ filter: { email } }))
+      throw new AppError("Email already exist", 409);
     const user: HydratedDocument<IUser> = await this._userModel.create({
-      userName,
+      firstName,
+      lastName,
       email,
       password: Hash({ plainText: password }),
       phone: phone ? encrypt(phone) : null,
@@ -83,6 +104,51 @@ class UserService {
   };
 
   // -------------------------------------------------------------
+  // Sign Up With Google
+  // -------------------------------------------------------------
+
+  signUpWithGoogle = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    const { idToken } = req.body;
+    const client = new OAuth2Client();
+    const ticket = await client.verifyIdToken({
+      idToken,
+      audience: CLIENT_ID,
+    });
+    const payload = ticket.getPayload();
+    const { email, email_verified, name, picture } = payload as TokenPayload;
+
+    let user = await this._userModel.findOne({ filter: { email } });
+    if (!user) {
+      user = await this._userModel.create({
+        email,
+        confirmed: email_verified,
+        userName: name,
+        // profilePicture: picture,
+        provider: ProviderEnum.google,
+      });
+    }
+    if (user.provider == ProviderEnum.system) {
+      throw new AppError("Please log in on system only", 400);
+    }
+
+    const access_token = GenerateToken({
+      payload: { id: user._id, email: user.email },
+      secret_key: SECRET_KEY,
+      options: { expiresIn: "1h" },
+    });
+    successResponse({
+      res,
+      status: 200,
+      message: "Login Successfully...",
+      data: { access_token },
+    });
+  };
+
+  // -------------------------------------------------------------
   // Confirm Email
   // -------------------------------------------------------------
   confirmEmail = async (req: Request, res: Response, next: NextFunction) => {
@@ -91,8 +157,8 @@ class UserService {
     const emailExist = await this._userModel.findOne({ filter: { email } });
     if (!emailExist) throw new AppError("Email not exists", 409);
 
-    const otpExist = await this._redis.getValue(
-      Keys.otp({ email, subject: emailEnum.confirmEmail }),
+    const otpExist = await this._redisService.getValue(
+      this._redisService.otp_key({ email, subject: EmailEnum.confirmEmail }),
     );
     if (!otpExist) throw new Error("OTP Expired");
     if (!Compare({ plainText: otp, cipherText: otpExist }))
@@ -104,12 +170,10 @@ class UserService {
     });
     if (!user) throw new Error("User not exist");
 
-    await this._redis.delValue(
-      Keys.otp({ email, subject: emailEnum.confirmEmail }),
+    await this._redisService.delValue(
+      this._redisService.otp_key({ email, subject: EmailEnum.confirmEmail }),
     );
-    res
-      .status(200)
-      .json({ message: "Email confirmed successfully", data: user });
+    res.status(200).json({ message: "Email confirmed successfully" });
   };
 
   // -------------------------------------------------------------
@@ -168,7 +232,7 @@ class UserService {
     await this.sendEmailOtp({
       email,
       userName: userExist.userName,
-      subject: emailEnum.forgetPassword,
+      subject: EmailEnum.forgetPassword,
     });
     res.status(200).json({
       message:
@@ -181,8 +245,8 @@ class UserService {
   // -------------------------------------------------------------
   resetPassword = async (req: Request, res: Response, next: NextFunction) => {
     const { email, otp, password } = req.body;
-    const otpExist = await this._redis.getValue(
-      Keys.otp({ email, subject: emailEnum.forgetPassword }),
+    const otpExist = await this._redisService.getValue(
+      this._redisService.otp_key({ email, subject: EmailEnum.forgetPassword }),
     );
     if (!otpExist) throw new AppError("OTP Expired", 401);
     if (!Compare({ plainText: otp, cipherText: otpExist }))
@@ -205,8 +269,11 @@ class UserService {
       filter: { email },
       update: { password: Hash({ plainText: Hash({ plainText: password }) }) },
     }),
-      await this._redis.delValue(
-        Keys.otp({ email, subject: emailEnum.forgetPassword }),
+      await this._redisService.delValue(
+        this._redisService.otp_key({
+          email,
+          subject: EmailEnum.forgetPassword,
+        }),
       ));
     res.status(200).json({
       message: "Password has been reset successfully",

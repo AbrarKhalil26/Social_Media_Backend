@@ -1,5 +1,5 @@
 import mongoose, { Types } from "mongoose";
-import { GenderEnum, RoleEnum } from "../../common/enum/user.enum";
+import { GenderEnum, ProviderEnum, RoleEnum } from "../../common/enum/user.enum";
 
 export interface IUser {
   _id: Types.ObjectId;
@@ -13,6 +13,7 @@ export interface IUser {
   address?: string;
   gender?: GenderEnum;
   role?: RoleEnum;
+  provider?: ProviderEnum;
   confirmed: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -71,6 +72,11 @@ const userSchema = new mongoose.Schema<IUser>(
       type: String,
       enum: RoleEnum,
       default: RoleEnum.user,
+    },
+    provider: {
+      type:String,
+      enum: ProviderEnum,
+      default: ProviderEnum.system
     },
     confirmed: Boolean,
   },

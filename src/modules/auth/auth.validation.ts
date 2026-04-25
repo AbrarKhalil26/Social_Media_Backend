@@ -17,7 +17,8 @@ export const general_rule = {
 export const signUpSchema = {
   body: z
     .object({
-      userName: z.string({ error: "userName is required" }).min(3).max(20),
+      firstName: z.string({ error: "firstName is required" }).min(3).max(20),
+      lastName: z.string({ error: "lastName is required" }).min(3).max(20),
       email: general_rule.emailField,
       password: general_rule.passwordField,
       cPassword: general_rule.passwordField,
