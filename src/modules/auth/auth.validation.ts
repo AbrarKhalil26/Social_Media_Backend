@@ -4,7 +4,7 @@ import { GenderEnum } from "../../common/enum/user.enum";
 // Global Field
 // =====================
 export const general_rule = {
-  emailField: z.string().email(),
+  emailField: z.string().email("Invalid email address"),
   otpField: z
     .string()
     .length(6)
@@ -14,9 +14,19 @@ export const general_rule = {
 
 // Main Field
 // =====================
+export const emailSchema = {
+  body: z.object({ email: general_rule.emailField }),
+};
+
+export const loginSchema = {
+  body: emailSchema.body.safeExtend({
+    password: general_rule.passwordField,
+  }),
+};
+
 export const signUpSchema = {
-  body: z
-    .object({
+  body: loginSchema.body
+    .safeExtend({
       firstName: z.string({ error: "firstName is required" }).min(3).max(20),
       lastName: z.string({ error: "lastName is required" }).min(3).max(20),
       email: general_rule.emailField,
@@ -34,21 +44,9 @@ export const signUpSchema = {
 };
 
 export const confirmEmailSchema = {
-  body: z.object({
-    email: general_rule.emailField,
+  body: emailSchema.body.safeExtend({
     otp: general_rule.otpField,
   }),
-};
-
-export const loginSchema = {
-  body: z.object({
-    email: general_rule.emailField,
-    password: general_rule.passwordField,
-  }),
-};
-
-export const emailSchema = {
-  body: z.object({ email: general_rule.emailField }),
 };
 
 export const resetPasswordSchema = {
@@ -77,5 +75,3 @@ export const updatePasswordSchema = {
       path: ["cPassword"],
     }),
 };
-
-export type ISignUpType = z.infer<typeof signUpSchema.body>;

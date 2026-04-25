@@ -7,7 +7,7 @@ export const successResponse = ({
   data,
 }: {
   res: Response;
-  status: number;
+  status?: number;
   message?: string;
   data?: unknown;
 }) => {

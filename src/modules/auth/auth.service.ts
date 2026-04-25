@@ -1,7 +1,12 @@
 import { HydratedDocument } from "mongoose";
 import type { Request, Response, NextFunction } from "express";
 import { type IUser } from "../../DB/models/user.model";
-import { SignupRequestBody } from "./auth.dto";
+import {
+  ConfirmEmailDTO,
+  ResendOtpDTO,
+  ResetPasswordDTO,
+  SignInDTO,
+} from "./auth.dto";
 import { AppError } from "../../common/utils/general-error-handler";
 import UserRepository from "../../DB/repositories/user.repository";
 import { encrypt } from "../../common/utils/security/encrypt.security";
@@ -11,7 +16,7 @@ import { emailTemplate } from "../../common/utils/email/email.template";
 import { EmailEnum } from "../../common/enum/email.enum";
 import { eventEmitter } from "../../common/utils/email/email.events";
 import { GenerateToken } from "../../common/utils/token.service";
-import { OAuth2Client } from "google-auth-library";
+import { OAuth2Client, TokenPayload } from "google-auth-library";
 import {
   ACCESS_SECRET_KEY,
   CLIENT_ID,
@@ -22,13 +27,6 @@ import { randomUUID } from "crypto";
 import { successResponse } from "../../common/utils/response.success";
 import { ProviderEnum } from "../../common/enum/user.enum";
 import redisService from "../../common/service/redis.service";
-
-type TokenPayload = {
-  email: string;
-  email_verified: boolean;
-  name: string;
-  picture: string;
-};
 
 class UserService {
   private readonly _userModel = new UserRepository();
@@ -106,7 +104,6 @@ class UserService {
   // -------------------------------------------------------------
   // Sign Up With Google
   // -------------------------------------------------------------
-
   signUpWithGoogle = async (
     req: Request,
     res: Response,
@@ -116,18 +113,19 @@ class UserService {
     const client = new OAuth2Client();
     const ticket = await client.verifyIdToken({
       idToken,
-      audience: CLIENT_ID,
+      audience: CLIENT_ID!,
     });
     const payload = ticket.getPayload();
+
     const { email, email_verified, name, picture } = payload as TokenPayload;
 
-    let user = await this._userModel.findOne({ filter: { email } });
+    let user = await this._userModel.findOne({ filter: { email: email! } });
     if (!user) {
       user = await this._userModel.create({
-        email,
-        confirmed: email_verified,
-        userName: name,
-        // profilePicture: picture,
+        email: email!,
+        confirmed: email_verified!,
+        userName: name!,
+        // profilePicture: picture!,
         provider: ProviderEnum.google,
       });
     }
@@ -142,7 +140,6 @@ class UserService {
     });
     successResponse({
       res,
-      status: 200,
       message: "Login Successfully...",
       data: { access_token },
     });
@@ -152,7 +149,7 @@ class UserService {
   // Confirm Email
   // -------------------------------------------------------------
   confirmEmail = async (req: Request, res: Response, next: NextFunction) => {
-    const { email, otp } = req.body;
+    const { email, otp }: ConfirmEmailDTO = req.body;
 
     const emailExist = await this._userModel.findOne({ filter: { email } });
     if (!emailExist) throw new AppError("Email not exists", 409);
@@ -173,14 +170,36 @@ class UserService {
     await this._redisService.delValue(
       this._redisService.otp_key({ email, subject: EmailEnum.confirmEmail }),
     );
-    res.status(200).json({ message: "Email confirmed successfully" });
+    successResponse({ res, message: "Email confirmed successfully" });
+  };
+
+  resendOtp = async (req: Request, res: Response, next: NextFunction) => {
+    const { email }: ResendOtpDTO = req.body;
+    const user = await this._userModel.findOne({
+      filter: {
+        email,
+        confirmed: { $exists: false },
+        provider: ProviderEnum.system,
+      },
+    });
+    if (!user) throw new Error("User not exist or already confirmed");
+    await this.sendEmailOtp({
+      email,
+      userName: user.userName,
+      subject: EmailEnum.confirmEmail,
+    });
+    successResponse({
+      res,
+      message: "Email confirmed successfully",
+      data: user,
+    });
   };
 
   // -------------------------------------------------------------
   // Login
   // -------------------------------------------------------------
   login = async (req: Request, res: Response, next: NextFunction) => {
-    const { email, password } = req.body;
+    const { email, password }: SignInDTO = req.body;
 
     const userExist = await this._userModel.findOne({ filter: { email } });
     if (!userExist) throw new AppError("User not exists", 409);
@@ -205,7 +224,8 @@ class UserService {
       secret_key: REFRESH_SECRET_KEY,
       options: { expiresIn: "1y", jwtid },
     });
-    res.status(200).json({
+    successResponse({
+      res,
       message: "Login Successfully...",
       data: { access_token, refresh_token },
     });
@@ -215,7 +235,7 @@ class UserService {
   // Forget Password
   // -------------------------------------------------------------
   forgetPassword = async (req: Request, res: Response, next: NextFunction) => {
-    const { email } = req.body;
+    const { email }: ResendOtpDTO = req.body;
     const userExist = await this._userModel.findOne({ filter: { email } });
     if (!userExist)
       throw new AppError(
@@ -234,7 +254,8 @@ class UserService {
       userName: userExist.userName,
       subject: EmailEnum.forgetPassword,
     });
-    res.status(200).json({
+    successResponse({
+      res,
       message:
         "An OTP has been sent to your email. Please use it to reset your password.",
     });
@@ -244,7 +265,7 @@ class UserService {
   // Reset Password
   // -------------------------------------------------------------
   resetPassword = async (req: Request, res: Response, next: NextFunction) => {
-    const { email, otp, password } = req.body;
+    const { email, otp, password }: ResetPasswordDTO = req.body;
     const otpExist = await this._redisService.getValue(
       this._redisService.otp_key({ email, subject: EmailEnum.forgetPassword }),
     );
@@ -275,9 +296,7 @@ class UserService {
           subject: EmailEnum.forgetPassword,
         }),
       ));
-    res.status(200).json({
-      message: "Password has been reset successfully",
-    });
+    successResponse({ res, message: "Password has been reset successfully" });
   };
 
   // -------------------------------------------------------------
@@ -294,9 +313,7 @@ class UserService {
         password: Hash({ plainText: Hash({ plainText: newPassword }) }),
       },
     });
-    res.status(200).json({
-      message: "Password has been reset successfully",
-    });
+    successResponse({ res, message: "Password has been reset successfully" });
   };
 }
 

@@ -12,6 +12,7 @@ authRouter.post(
   validation(AuthValidation.signUpSchema),
   AuthService.signUp,
 );
+authRouter.post("/signup/google", AuthService.signUpWithGoogle);
 
 // -----------------------------------
 // Confirm email ---------------------
@@ -19,6 +20,11 @@ authRouter.post(
   "/verify-email",
   validation(AuthValidation.confirmEmailSchema),
   AuthService.confirmEmail,
+);
+authRouter.post(
+  "/resend-otp",
+  validation(AuthValidation.emailSchema),
+  AuthService.resendOtp,
 );
 
 // -------------------------------
@@ -43,7 +49,6 @@ authRouter.patch(
   "/reset-password",
   validation(AuthValidation.resetPasswordSchema),
   AuthService.resetPassword,
-
 );
 
 // -----------------------------------
@@ -54,6 +59,5 @@ authRouter.patch(
   validation(AuthValidation.updatePasswordSchema),
   AuthService.updatePassword,
 );
-
 
 export default authRouter;
