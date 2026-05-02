@@ -11,6 +11,10 @@ import {
 import authRouter from "./modules/auth/auth.controller";
 import { checkConnectionDB } from "./DB/connectionDB";
 import redisService from "./common/service/redis.service";
+import userModel from "./DB/models/user.model";
+import { S3Service } from "./common/service/s3.service";
+import { successResponse } from "./common/utils/response.success";
+import { pipeline } from "node:stream/promises";
 
 const app: express.Application = express();
 const port: number = Number(PORT);
@@ -32,6 +36,28 @@ const bootstrap = async () => {
     res
       .status(200)
       .json({ message: `Welcome on Social Media App ...........` }),
+  );
+
+  // async function test() {
+  //   const user = await userModel.findOne({
+  //     firstName: "Abrar",
+  //     paranoid: true,
+  //   });
+  //   console.log({ user });
+  // }
+  // test();
+
+  app.get(
+    "/upload/*path",
+    async (req: Request, res: Response, next: NextFunction) => {
+      const { path } = req.params as { path: string[] };
+      const Key = path.join("/");
+      const result = await new S3Service().getFile(Key);
+      const stream = result.Body as NodeJS.ReadableStream;
+      res.setHeader("Content-Type", result.ContentType!)
+      await pipeline(stream, res)
+      successResponse({ res, data: result });
+    },
   );
 
   app.use("/auth", authRouter);

@@ -3,6 +3,8 @@ import AuthService from "./auth.service";
 import * as AuthValidation from "./auth.validation";
 import { validation } from "../../common/middleware/validation";
 import { authentication } from "../../common/middleware/authentication";
+import multerCloud from "../../common/middleware/multer.cloud";
+import { Store_Enum } from "../../common/enum/multer.enum";
 
 const authRouter = Router();
 // --------------------------------
@@ -52,12 +54,20 @@ authRouter.patch(
 );
 
 // -----------------------------------
-// Update Password --------------------
+// Update Password -------------------
 authRouter.patch(
   "/update-password",
   authentication,
   validation(AuthValidation.updatePasswordSchema),
   AuthService.updatePassword,
+);
+
+// -------------------------------
+// Upload ------------------------
+authRouter.post(
+  "/upload",
+  // multerCloud({ store_type: Store_Enum.memory }).single("attachment"),
+  AuthService.uploadImage,
 );
 
 export default authRouter;

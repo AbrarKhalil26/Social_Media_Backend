@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import { ACCESS_SECRET_KEY, PREFIX } from "../../config/config.service";
-import { VerifyToken } from "../utils/token.service";
+import { VerifyToken } from "../service/token.service";
 import { AppError } from "../utils/general-error-handler";
 import UserRepository from "../../DB/repositories/user.repository";
 

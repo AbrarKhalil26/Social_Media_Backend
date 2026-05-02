@@ -15,7 +15,7 @@ import { generateOTP, sendEmail } from "../../common/utils/email/send.email";
 import { emailTemplate } from "../../common/utils/email/email.template";
 import { EmailEnum } from "../../common/enum/email.enum";
 import { eventEmitter } from "../../common/utils/email/email.events";
-import { GenerateToken } from "../../common/utils/token.service";
+import { GenerateToken } from "../../common/service/token.service";
 import { OAuth2Client, TokenPayload } from "google-auth-library";
 import {
   ACCESS_SECRET_KEY,
@@ -27,9 +27,11 @@ import { randomUUID } from "crypto";
 import { successResponse } from "../../common/utils/response.success";
 import { ProviderEnum } from "../../common/enum/user.enum";
 import redisService from "../../common/service/redis.service";
+import { S3Service } from "../../common/service/s3.service";
 
 class UserService {
   private readonly _userModel = new UserRepository();
+  private readonly _s3Service = new S3Service();
   private readonly _redisService = redisService;
 
   constructor() {}
@@ -314,6 +316,28 @@ class UserService {
       },
     });
     successResponse({ res, message: "Password has been reset successfully" });
+  };
+
+  // -------------------------------------------------------------
+  // Upload Image
+  // -------------------------------------------------------------
+  uploadImage = async (req: Request, res: Response, next: NextFunction) => {
+    // const urls = await this._s3Service.uploadFiles({
+    //   files: req.files as Express.Multer.File[],
+    //   path: "users/many",
+    //   isLarge: true
+    // });
+    const { fileName, ContentType } = req.body;
+    const { url, Key } = await this._s3Service.createPreSignedUrl({
+      fileName,
+      ContentType,
+      path: `users/${req?.user?._id}`,
+    });
+    await this._userModel.findOneAndUpdate({
+      filter: { _id: req?.user?._id },
+      update: { profilePic: Key },
+    });
+    successResponse({ res, data: { Key, url } });
   };
 }
 
