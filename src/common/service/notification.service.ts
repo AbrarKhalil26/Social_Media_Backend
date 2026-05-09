@@ -1,18 +1,13 @@
 import admin from "firebase-admin";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { FIREBASE_SERVICE_ACCOUNT } from "../../config/config.service";
 
 class NotificationService {
   private readonly client: admin.app.App;
 
   constructor() {
-    const serviceAccount = JSON.parse(
-      readFileSync(
-        resolve(
-          __dirname,
-          "../../config/social-app-online-d5b24-firebase-adminsdk-fbsvc-26dbac5769.json",
-        ),
-      ) as unknown as string,
+    const serviceAccount = JSON.parse(FIREBASE_SERVICE_ACCOUNT as unknown as string,
     );
     this.client = admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
