@@ -1,5 +1,8 @@
 import {
+  DeleteObjectCommand,
+  DeleteObjectsCommand,
   GetObjectCommand,
+  ListObjectsV2Command,
   ObjectCannedACL,
   PutObjectCommand,
   S3Client,
@@ -28,7 +31,9 @@ export class S3Service {
       },
     });
   }
-
+  // -------------------------------------------
+  //  Update
+  // -------------------------------------------
   async uploadFile({
     file,
     store_type = Store_Enum.memory,
@@ -113,7 +118,9 @@ export class S3Service {
       );
     }
   }
-
+  // -------------------------------------------
+  //  Create
+  // -------------------------------------------
   async createPreSignedUrl({
     path,
     fileName,
@@ -134,12 +141,71 @@ export class S3Service {
     const url = await getSignedUrl(this.client, command, { expiresIn });
     return { url, Key };
   }
-
+  // -------------------------------------------
+  //  Get
+  // -------------------------------------------
   async getFile(Key: string) {
     const command = new GetObjectCommand({
       Bucket: AWS_BUCKET_NAME,
       Key,
     });
     return await this.client.send(command);
+  }
+
+  async getPreSignedUrl({
+    path,
+    fileName,
+    expiresIn = 60,
+  }: {
+    path?: string;
+    fileName: string;
+    expiresIn?: number;
+  }) {
+    const Key = `social_media_app/${path}/${randomUUID()}__${fileName}`;
+    const command = new GetObjectCommand({
+      Bucket: AWS_BUCKET_NAME,
+      Key,
+    });
+    const url = await getSignedUrl(this.client, command, { expiresIn });
+    return url;
+  }
+
+  async getFiles(folderName: string) {
+    const command = new ListObjectsV2Command({
+      Bucket: AWS_BUCKET_NAME,
+      Prefix: `social_media_app/${folderName}`,
+    });
+    return await this.client.send(command);
+  }
+  // -------------------------------------------
+  //  Delete File(s)
+  // -------------------------------------------
+  async deleteFile(Key: string) {
+    const command = new DeleteObjectCommand({
+      Bucket: AWS_BUCKET_NAME,
+      Key,
+    });
+    return await this.client.send(command);
+  }
+
+  async deleteFiles(Keys: string[]) {
+    const keyMapped = Keys.map((Key) => {
+      return { Key };
+    });
+    const command = new DeleteObjectsCommand({
+      Bucket: AWS_BUCKET_NAME,
+      Delete: { Objects: keyMapped, Quiet: false },
+    });
+    return await this.client.send(command);
+  }
+  // -------------------------------------------
+  //  Delete Folder
+  // -------------------------------------------
+  async deleteFolder(folderName: string) {
+    const data = await this.getFiles(folderName);
+    const keyMapped = data?.Contents?.map((Key) => {
+      return Key.Key!;
+    });
+    return await this.deleteFiles(keyMapped as string[]);
   }
 }

@@ -21,6 +21,7 @@ interface UpdateOptions {
 // -----------------------------------------------
 class RedisService {
   private readonly client: RedisClientType;
+
   constructor() {
     this.client = createClient({ url: REDIS_URL! });
     this.handleEvents();
@@ -139,6 +140,31 @@ class RedisService {
       return null;
     }
   }
+
+  // ------------------------------------------------
+  // FCM Tokens
+  // ------------------------------------------------
+  key = (userId: Types.ObjectId) => `user:FCM:${userId}`;
+
+  addFCM = ({
+    userId,
+    FCMToken,
+  }: {
+    userId: Types.ObjectId;
+    FCMToken: string;
+  }) => this.client.sAdd(this.key(userId), FCMToken);
+
+  removeFCM = ({
+    userId,
+    FCMToken,
+  }: {
+    userId: Types.ObjectId;
+    FCMToken: string;
+  }) => this.client.sRem(this.key(userId), FCMToken);
+
+  getFCM = (userId: Types.ObjectId) => this.client.sMembers(this.key(userId));
+  hasFCM = (userId: Types.ObjectId) => this.client.sCard(this.key(userId));
+  removeFCMUser = (userId: Types.ObjectId) => this.client.del(this.key(userId));
 }
 
 export default new RedisService();

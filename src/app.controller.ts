@@ -15,6 +15,7 @@ import userModel from "./DB/models/user.model";
 import { S3Service } from "./common/service/s3.service";
 import { successResponse } from "./common/utils/response.success";
 import { pipeline } from "node:stream/promises";
+import notificationService from "./common/service/notification.service";
 
 const app: express.Application = express();
 const port: number = Number(PORT);
@@ -38,6 +39,17 @@ const bootstrap = async () => {
       .json({ message: `Welcome on Social Media App ...........` }),
   );
 
+  app.post(
+    "/send-notification",
+    async (req: Request, res: Response, next: NextFunction) => {
+      await notificationService.sendNotification({
+        token: req.body.token,
+        data: { title: "Hi", body: "hiii tany" },
+      });
+      console.log({ token: req.body.token });
+    },
+  );
+
   // async function test() {
   //   const user = await userModel.findOne({
   //     firstName: "Abrar",
@@ -48,17 +60,38 @@ const bootstrap = async () => {
   // test();
 
   app.get(
-    "/upload/*path",
+    "/upload",
     async (req: Request, res: Response, next: NextFunction) => {
-      const { path } = req.params as { path: string[] };
-      const Key = path.join("/");
-      const result = await new S3Service().getFile(Key);
-      const stream = result.Body as NodeJS.ReadableStream;
-      res.setHeader("Content-Type", result.ContentType!)
-      await pipeline(stream, res)
-      successResponse({ res, data: result });
+      const { folderName } = req.query as { folderName: string };
+      const result = await new S3Service().getFiles(folderName);
+      const resultMapped = result.Contents?.map((file) => {
+        return { Key: file.Key };
+      });
+      successResponse({ res, data: resultMapped });
     },
   );
+  // app.get(
+  //   "/upload/*path",
+  //   async (req: Request, res: Response, next: NextFunction) => {
+  //     const { path } = req.params as { path: string[] };
+  //     const { download } = req.query;
+  //     const Key = path.join("/");
+  //     const result = await new S3Service().getFile(Key);
+  //     const stream = result.Body as NodeJS.ReadableStream;
+
+  //     res.setHeader("Content-Type", result.ContentType!);
+  //     res.setHeader("Cross-Origin_Resource-Policy", "cross-origin");
+
+  //     if (download && download === "true") {
+  //       res.setHeader(
+  //         "Content-Disposition",
+  //         `attachment; filename="${path.pop()}"`,
+  //       );
+  //     }
+  //     await pipeline(stream, res);
+  //     successResponse({ res, data: result });
+  //   },
+  // );
 
   app.use("/auth", authRouter);
 
