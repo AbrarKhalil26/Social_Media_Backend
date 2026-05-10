@@ -16,6 +16,7 @@ import { S3Service } from "./common/service/s3.service";
 import { successResponse } from "./common/utils/response.success";
 import { pipeline } from "node:stream/promises";
 import notificationService from "./common/service/notification.service";
+import postRouter from "./modules/posts/post.controller";
 
 const app: express.Application = express();
 const port: number = Number(PORT);
@@ -94,6 +95,7 @@ const bootstrap = async () => {
   // );
 
   app.use("/auth", authRouter);
+  app.use("/posts", postRouter);
 
   app.use("{/*demo}", (req: Request, res: Response, next: NextFunction) => {
     throw new AppError(
