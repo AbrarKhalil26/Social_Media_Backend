@@ -18,7 +18,7 @@ import { eventEmitter } from "../../common/utils/email/email.events";
 import { GenerateToken } from "../../common/service/token.service";
 import { OAuth2Client, TokenPayload } from "google-auth-library";
 import {
-  ACCESS_SECRET_KEY,
+  ACCESS_SECRET_KEY_USER,
   CLIENT_ID,
   REFRESH_SECRET_KEY,
   SECRET_KEY,
@@ -220,8 +220,8 @@ class UserService {
     const jwtid = randomUUID();
     const access_token = GenerateToken({
       payload: { id: userExist._id, email },
-      secret_key: ACCESS_SECRET_KEY,
-      options: { expiresIn: 60 * 3, jwtid },
+      secret_key: ACCESS_SECRET_KEY_USER,
+      options: { expiresIn: 60 * 15, jwtid },
     });
     const refresh_token = GenerateToken({
       payload: { id: userExist._id, email },

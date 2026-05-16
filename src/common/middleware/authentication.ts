@@ -1,18 +1,22 @@
 import type { Request, Response, NextFunction } from "express";
-import { ACCESS_SECRET_KEY, PREFIX } from "../../config/config.service";
+import { ACCESS_SECRET_KEY_ADMIN, ACCESS_SECRET_KEY_USER, PREFIX_ADMIN, PREFIX_USER } from "../../config/config.service";
 import { VerifyToken } from "../service/token.service";
 import { AppError } from "../utils/general-error-handler";
 import UserRepository from "../../DB/repositories/user.repository";
 
+const _userModel = new UserRepository();
 
 export const authentication = async (req: Request, res: Response, next: NextFunction) => {
   const { authorization } = req.headers;
-  const _userModel = new UserRepository();
   if (!authorization) {
     throw new AppError("Unauthorized: token missing.", 401);
   }
   const [prefix, token] = authorization.split(" ");
-  if (prefix !== PREFIX) throw new AppError("Unauthorized: invalid token type", 401);
+  let ACCESS_SECRET_KEY = "";
+  if (prefix == PREFIX_USER) ACCESS_SECRET_KEY = ACCESS_SECRET_KEY_USER!
+  else if (prefix == PREFIX_ADMIN) ACCESS_SECRET_KEY = ACCESS_SECRET_KEY_ADMIN!
+  else throw new AppError("Unauthorized: invalid token type", 401);
+  
   if (!token) throw new AppError("Unauthorized: token missing", 401);
 
   // Verify Token and get decoded data ------->

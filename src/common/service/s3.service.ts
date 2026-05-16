@@ -104,10 +104,11 @@ export class S3Service {
     isLarge?: boolean;
   }) {
     let urls: string[] = [];
+    
     if (isLarge) {
       urls = await Promise.all(
         files.map((file) => {
-          return this.uploadFile({ file, store_type, path, ACL });
+          return this.uploadLargeFile({ file, store_type, path, ACL });
         }),
       );
     } else {
@@ -117,6 +118,7 @@ export class S3Service {
         }),
       );
     }
+    return urls;
   }
   // -------------------------------------------
   //  Create

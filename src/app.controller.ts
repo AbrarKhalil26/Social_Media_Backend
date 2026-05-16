@@ -17,6 +17,8 @@ import { successResponse } from "./common/utils/response.success";
 import { pipeline } from "node:stream/promises";
 import notificationService from "./common/service/notification.service";
 import postRouter from "./modules/posts/post.controller";
+import { GraphQLObjectType, GraphQLSchema, GraphQLString } from "graphql";
+import { createHandler } from "graphql-http/lib/use/express";
 
 const app: express.Application = express();
 const port: number = Number(PORT);
@@ -39,6 +41,23 @@ const bootstrap = async () => {
       .status(200)
       .json({ message: `Welcome on Social Media App ...........` }),
   );
+
+  const schema = new GraphQLSchema({
+    query: new GraphQLObjectType({
+      name: "query",
+      // description: "",
+      fields: {
+        users: {
+          type: GraphQLString,
+          resolve: () => {
+            return "hello";
+          },
+        },
+      },
+    }),
+  });
+
+  app.use("/graphql", createHandler({schema}))
 
   app.post(
     "/send-notification",

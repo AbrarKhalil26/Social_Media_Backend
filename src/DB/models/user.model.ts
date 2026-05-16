@@ -27,6 +27,7 @@ export interface IUser {
   confirmed: boolean;
   createdAt: Date;
   updatedAt: Date;
+  friends: [Types.ObjectId]
 }
 
 const userSchema = new mongoose.Schema<IUser>(
@@ -90,6 +91,7 @@ const userSchema = new mongoose.Schema<IUser>(
     },
     profilePic: String,
     confirmed: Boolean,
+    friends: [{ type: Types.ObjectId, ref:"User"}]
   },
   {
     timestamps: true,
