@@ -4,11 +4,6 @@ import {
   ProviderEnum,
   RoleEnum,
 } from "../../common/enum/user.enum";
-import { Hash } from "../../common/utils/security/hash";
-import { generateOTP, sendEmail } from "../../common/utils/email/send.email";
-import { eventEmitter } from "../../common/utils/email/email.events";
-import { EmailEnum } from "../../common/enum/email.enum";
-import { emailTemplate } from "../../common/utils/email/email.template";
 
 export interface IUser {
   _id: Types.ObjectId;
@@ -27,7 +22,7 @@ export interface IUser {
   confirmed: boolean;
   createdAt: Date;
   updatedAt: Date;
-  friends: [Types.ObjectId]
+  friends?: [Types.ObjectId]
 }
 
 const userSchema = new mongoose.Schema<IUser>(

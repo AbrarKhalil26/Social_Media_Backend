@@ -91,7 +91,15 @@ class PostService {
 
     const posts = await this._postRepo.find({
       filter: { $or: [...AvailabilityPost(req)] },
-      options: { populate: [{ path: "comments" }] },
+      options: {
+        populate: [
+          {
+            path: "comments",
+            match: { commentId: { $existed: false } },
+            populate: [{ path: "replies" }],
+          },
+        ],
+      },
     });
     successResponse({ res, data: posts });
   };
@@ -123,7 +131,7 @@ class PostService {
   };
 
   updatePost = async (req: Request, res: Response, next: NextFunction) => {
-    const { postId }: UpdatePostParamsDTO = req.params;
+    const { postId } = req.params;
     const {
       content,
       tags,

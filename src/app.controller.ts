@@ -17,8 +17,19 @@ import { successResponse } from "./common/utils/response.success";
 import { pipeline } from "node:stream/promises";
 import notificationService from "./common/service/notification.service";
 import postRouter from "./modules/posts/post.controller";
-import { GraphQLObjectType, GraphQLSchema, GraphQLString } from "graphql";
+import {
+  GraphQLEnumType,
+  GraphQLInt,
+  GraphQLNonNull,
+  GraphQLObjectType,
+  GraphQLSchema,
+  GraphQLString,
+} from "graphql";
 import { createHandler } from "graphql-http/lib/use/express";
+import { GenderEnum } from "./common/enum/user.enum";
+import { Server } from "socket.io";
+import { decodedToken_and_fetchUser } from "./common/middleware/authentication";
+import socketGateway from "./modules/realtime/socket.gateway";
 
 const app: express.Application = express();
 const port: number = Number(PORT);
@@ -41,13 +52,31 @@ const bootstrap = async () => {
       .status(200)
       .json({ message: `Welcome on Social Media App ...........` }),
   );
+  const users = [];
+
+  const GenderType = new GraphQLEnumType({
+    name: "GenderType",
+    values: {
+      male: { value: "male" },
+      female: { value: "female" },
+    },
+  });
+  const userType = new GraphQLObjectType({
+    name: "getUser",
+    fields: {
+      id: { type: GraphQLInt },
+      age: { type: GraphQLInt },
+      name: { type: GraphQLString },
+      gender: { type: GenderType },
+    },
+  });
 
   const schema = new GraphQLSchema({
     query: new GraphQLObjectType({
       name: "query",
       // description: "",
       fields: {
-        users: {
+        createUser: {
           type: GraphQLString,
           resolve: () => {
             return "hello";
@@ -55,9 +84,26 @@ const bootstrap = async () => {
         },
       },
     }),
+    mutation: new GraphQLObjectType({
+      name: "mutation",
+      fields: {
+        createUser: {
+          type: userType,
+          args: {
+            id: { type: new GraphQLNonNull(GraphQLInt) },
+            age: { type: new GraphQLNonNull(GraphQLInt) },
+            gender: { type: new GraphQLNonNull(GenderType) },
+            name: { type: new GraphQLNonNull(GraphQLString) },
+          },
+          resolve: (parent, args) => {
+            const userExist = users.find((user) => user.id == args.id);
+          },
+        },
+      },
+    }),
   });
 
-  app.use("/graphql", createHandler({schema}))
+  app.use("/graphql", createHandler({ schema }));
 
   app.post(
     "/send-notification",
@@ -124,7 +170,9 @@ const bootstrap = async () => {
   });
 
   app.use(globalErrorHandler);
-
-  app.listen(port, () => console.log(`Server is running on port ${port}`));
+  const httpServer = app.listen(port, () =>
+    console.log(`Server is running on port ${port}`),
+  );
+  await socketGateway.initIo(httpServer);
 };
 export default bootstrap;

@@ -8,7 +8,7 @@ import { Store_Enum } from "../../common/enum/multer.enum";
 import commentRouter from "../comments/comment.controller";
 
 const postRouter = Router();
-postRouter.use("/:postId/comments", commentRouter)
+postRouter.use("/:postId/comments{/:commentId/replies}", commentRouter)
 
 // --------------------------------
 // Create -------------------------

@@ -1,4 +1,4 @@
-import { HydratedDocument } from "mongoose";
+import { HydratedDocument, Types } from "mongoose";
 import type { Request, Response, NextFunction } from "express";
 import { type IUser } from "../../DB/models/user.model";
 import {
@@ -234,8 +234,11 @@ class UserService {
       const tokens = await this._redisService.getFCM(userExist._id);
       await this._notificationService.sendNotifications({
         tokens: tokens!,
-        data: {title: `hi ${userExist.firstName}`, body: `new login at ${ new Date()}`}
-      })
+        data: {
+          title: `hi ${userExist.firstName}`,
+          body: `new login at ${new Date()}`,
+        },
+      });
     }
     successResponse({
       res,
@@ -350,6 +353,34 @@ class UserService {
     });
     successResponse({ res, data: { Key, url } });
   };
+
+  // -------------------------------------------------------------
+  // Forget Password
+  // -------------------------------------------------------------
+  getProfile = async (req: Request, res: Response, next: NextFunction) => {
+    const user = await this._userModel.findOne({
+      filter: { _id: req.user._id as Types.ObjectId },
+      options: { populate: [{ path: "friends" }] },
+    });
+    successResponse({ res, data: { user } });
+  };
+
+  addFriends = async (req: Request, res: Response, next: NextFunction) => {
+    const { friendId } = req.body;
+    const friend = await this._userModel.findOne({
+      filter: { _id: friendId as Types.ObjectId },
+    });
+    if (!friend) throw new AppError("Friend not found", 404);
+    await this._userModel.findOneAndUpdate({
+      filter: { _id: req.user._id as Types.ObjectId },
+      update: { $addToSet: { friends: friendId as Types.ObjectId } },
+    });
+    await this._userModel.findOneAndUpdate({
+      filter: { _id: friendId as Types.ObjectId },
+      update: { $addToSet: { friends: req.user._id as Types.ObjectId } },
+    });
+    successResponse({ res, message: "Friend added successfully" });
+  }
 }
 
 export default new UserService();

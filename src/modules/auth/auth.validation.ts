@@ -21,7 +21,7 @@ export const emailSchema = {
 export const loginSchema = {
   body: emailSchema.body.safeExtend({
     password: general_rule.passwordField,
-    fcm: z.string(),
+    fcm: z.string().optional(),
   }),
 };
 

@@ -16,14 +16,5 @@ commentRouter.post(
   validation(CommentValidation.createCommentSchema),
   CommentService.createComment,
 );
-// --------------------------------
-// Create reply -------------------------
-commentRouter.post(
-  "/:commentId/replies",
-  authentication,
-  multerCloud({ store_type: Store_Enum.memory }).array("attachments"),
-  // validation(CommentValidation.createCommentSchema),
-  CommentService.createReply,
-);
 
 export default commentRouter;

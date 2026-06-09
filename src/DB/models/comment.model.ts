@@ -1,4 +1,5 @@
 import mongoose, { Types } from "mongoose";
+import { On_Model_Enum } from "../../common/enum/post-enum";
 
 export interface IComment {
   content?: string;
@@ -7,8 +8,8 @@ export interface IComment {
   likes?: Types.ObjectId[];
   tags?: Types.ObjectId[];
   createdBy: Types.ObjectId;
-  postId: Types.ObjectId;
-  commentId: Types.ObjectId;
+  refId: Types.ObjectId;
+  onModel: On_Model_Enum;
 }
 
 const commentSchema = new mongoose.Schema<IComment>(
@@ -26,19 +27,11 @@ const commentSchema = new mongoose.Schema<IComment>(
       ref: "User",
       required: true,
     },
-    postId: {
-      type: Types.ObjectId,
-      ref: "Post",
-      required: true,
-    },
-    commentId: {
-      type: Types.ObjectId,
-      ref: "Comment",
-    },
+    refId: { type: Types.ObjectId, refPath: "onModel", required: true },
+    onModel: { type: String, required: true },
     tags: [{ type: Types.ObjectId, ref: "User" }],
     likes: [{ type: Types.ObjectId, ref: "User" }],
     folderId: String,
-
   },
   {
     timestamps: true,
@@ -48,6 +41,11 @@ const commentSchema = new mongoose.Schema<IComment>(
     toObject: { virtuals: true },
   },
 );
+commentSchema.virtual("replies", {
+  ref: "Comment",
+  localField: "_id",
+  foreignField: "refId",
+});
 
 const commentModel =
   mongoose.models.Comment || mongoose.model<IComment>("Comment", commentSchema);

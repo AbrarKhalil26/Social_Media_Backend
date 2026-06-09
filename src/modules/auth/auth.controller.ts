@@ -5,8 +5,11 @@ import { validation } from "../../common/middleware/validation";
 import { authentication } from "../../common/middleware/authentication";
 import multerCloud from "../../common/middleware/multer.cloud";
 import { Store_Enum } from "../../common/enum/multer.enum";
+import chatRouter from "../chat/chat.controller";
 
 const authRouter = Router();
+
+authRouter.use("/:userId/chat", chatRouter )
 // --------------------------------
 // Sign Up ------------------------
 authRouter.post(
@@ -66,8 +69,11 @@ authRouter.patch(
 // Upload ------------------------
 authRouter.post(
   "/upload",
-  multerCloud({ store_type: Store_Enum.disk }).array ("attachment"),
+  multerCloud({ store_type: Store_Enum.disk }).array("attachment"),
   AuthService.uploadImage,
 );
+
+authRouter.get("/profile", authentication, AuthService.getProfile);
+authRouter.post("/add-friends", authentication, AuthService.addFriends);
 
 export default authRouter;
