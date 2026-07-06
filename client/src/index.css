@@ -1,0 +1,101 @@
+@import "tailwindcss";
+@import "flowbite-react/plugin/tailwindcss";
+@source "../.flowbite-react/class-list.json";
+
+@theme {
+  --font-logo: "Playwrite PL", sans-serif;
+  --font-primary: "Rubik", sans-serif;
+  --color-base: oklch(20.5% 0 0);
+}
+
+@layer base {
+  body {
+    @apply font-primary;
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-bold;
+  }
+  h1 {
+    @apply text-3xl;
+  }
+  h2 {
+    @apply text-2xl;
+  }
+  h3 {
+    @apply text-xl;
+  }
+  h4 {
+    @apply text-lg;
+  }
+  h5 {
+    @apply text-base;
+  }
+  h6 {
+    @apply text-sm;
+  }
+}
+
+@layer utilities {
+  .logo {
+    @apply font-logo;
+  }
+  .container {
+    @apply mx-auto px-4 sm:px-6 lg:px-8;
+  }
+  .error-message {
+    @apply text-red-500 text-[12px] mt-2 italic;
+  }
+  [aria-live="polite"] {
+    @apply w-full;
+  }
+  .profile-picture * {
+    @apply w-22 h-22;
+  }
+  .date-input input[type="text"] {
+    @apply bg-base text-white border-white;
+  }
+
+  .btn-yellow {
+    @apply ml-auto relative cursor-pointer bg-yellow-300! overflow-hidden z-0
+                    after:content-['']
+                    after:absolute
+                    after:inset-0
+                    after:-z-10
+                    after:rounded-lg
+                    after:bg-gradient-to-r
+                    after:from-lime-200
+                    after:via-yellow-400
+                    after:to-yellow-500
+                    after:transition-transform
+                    after:duration-500
+                    hover:after:rotate-180;
+  }
+}
+
+@font-face {
+  font-family: "Playwrite PL";
+  src: url("/src/assets/fonts/Playwrite_PL/PlaywritePL.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Rubik";
+  src: url("/src/assets/fonts/Rubik/Rubik.ttf") format("truetype");
+}
+@keyframes mirrorFlip {
+  0% {
+    transform: rotateY(0deg);
+  }
+
+  50% {
+    transform: rotateY(180deg);
+  }
+
+  100% {
+    transform: rotateY(0deg);
+  }
+}
