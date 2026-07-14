@@ -36,6 +36,7 @@ postRouter.patch(
 postRouter.put(
   "/update/:postId",
   authentication,
+  multerCloud({ store_type: Store_Enum.memory }).array("attachments"),
   validation(PostValidation.updatePostSchema),
   PostService.updatePost,
 );

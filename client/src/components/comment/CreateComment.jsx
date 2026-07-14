@@ -19,7 +19,7 @@ export default function CreateComment({ postId }) {
     formState: { isValid },
   } = useForm();
 
-  const { mutate } = useCreateComment(postId);
+  const { mutate } = useCreateComment(postId, reset);
   const onSubmit = (data) => mutate(data);
 
   return (

@@ -1,15 +1,42 @@
 import axios from "axios";
 import { Card, Textarea } from "flowbite-react";
 import CardHeader from "../posts/CardHeader";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import AppButton from "../shared/AppButton";
 import { AxiosInstance } from "../../services/api";
+import useFetch from "../../hooks/useFetch";
+import PostActions from "../posts/PostActions";
 
-export default function CommentItem({ comment }) {
+export default function CommentItem({ postId, comment }) {
   const [editComment, setEditComment] = useState(false);
+  const { data: ownerComment } = useFetch({
+    queryKey: "owner-comment",
+    endPoint: `/users/${comment.createdBy}`,
+  });
+  const likePostMe = comment.likes.some((item) => item === userData._id);
+  const [likePost, setLikePost] = useState(likePostMe);
+  const { data: ownerPost } = useFetch({
+    queryKey: ["owner-post", , comment.createdBy],
+    endPoint: `/users/${comment.createdBy}`,
+    options: { select: (data) => data.data },
+  });
+
+  const handleLike = async (newState) => {
+    const prevState = likePost;
+    setLikePost(newState);
+    try {
+      return newState
+        ? await likePostService(_id)
+        : await likePostService(_id, "disLike");
+    } catch (err) {
+      setLikePost(prevState);
+      ErrorToast(err);
+    }
+  };
+
   const {
     register,
     handleSubmit,
@@ -17,6 +44,7 @@ export default function CommentItem({ comment }) {
     formState: { isValid },
   } = useForm();
   const queryClient = useQueryClient();
+  console.log("comment", comment);
 
   const { mutate, isPending } = useMutation({
     mutationFn: handleUpdate,
@@ -40,13 +68,22 @@ export default function CommentItem({ comment }) {
   });
 
   async function handleUpdate(data) {
-    return await AxiosInstance.put(`/comments/${comment._id}`, data);
+    return await AxiosInstance.put(
+      `/post/${postId}/comments/${comment._id}`,
+      data,
+    );
   }
 
   return (
-    <Card>
-      <CardHeader comment={comment} setEditComment={setEditComment} isComment />
-      {/* {editComment ? ( */}
+    <div className="p-3 hover:bg-neutral-800 hover:rounded-lg">
+      <CardHeader
+        owner={ownerComment?.data}
+        comment={comment}
+        setEditComment={setEditComment}
+        isComment="true"
+      />
+
+      {editComment ? (
         <form onSubmit={handleSubmit(mutate)} className="flex flex-col gap-4">
           <Textarea
             defaultValue={comment.content}
@@ -74,11 +111,22 @@ export default function CommentItem({ comment }) {
             </AppButton>
           </div>
         </form>
-      {/* ) : ( */}
-        {/* <p className={`font-normal text-gray-700 dark:text-gray-200 truncate `}>
+      ) : (
+        <p
+          className={`font-normal text-gray-700 dark:text-gray-200 truncate py-2 pl-13`}
+        >
           {comment.content}
         </p>
-      )} */}
-    </Card>
+      )}
+      <div className="pl-13">
+        <PostActions
+          data={comment}
+          likePost={likePost}
+          likePostMe={likePostMe}
+          handleLike={handleLike}
+          isComment
+        />
+      </div>
+    </div>
   );
 }

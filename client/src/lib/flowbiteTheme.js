@@ -20,8 +20,8 @@ export const customTheme = createTheme({
       },
       active: "dark:bg-neutral-800",
       icon: {
-        active: "dark:text-amber-400"
-      }
+        active: "dark:text-amber-400",
+      },
     },
     items: {
       base: "flex flex-col h-full justify-center",
@@ -39,6 +39,7 @@ export const customTheme = createTheme({
       },
     },
   },
+
   listGroup: {
     item: {
       link: {
@@ -49,18 +50,7 @@ export const customTheme = createTheme({
       },
     },
   },
-  dropdown: {
-    arrowIcon: "hidden",
-    floating: {
-      content: "py-1 text-sm text-neutral-700 dark:text-neutral-200",
-      item: {
-        base: "flex w-full cursor-pointer items-center justify-start px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-100 focus:bg-neutral-100 focus:outline-none dark:text-neutral-200 dark:hover:bg-neutral-600 dark:hover:text-white dark:focus:bg-neutral-600 dark:focus:text-white",
-      },
-      style: {
-        dark: "bg-neutral-900 text-white dark:bg-neutral-700",
-      },
-    },
-  },
+
   textarea: {
     colors: {
       dark: "bg-base text-white border-neutral-700 focus:ring-neutral-600 ",

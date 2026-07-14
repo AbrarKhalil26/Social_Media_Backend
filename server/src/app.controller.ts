@@ -29,6 +29,7 @@ import { createHandler } from "graphql-http/lib/use/express";
 import socketGateway from "./modules/realtime/socket.gateway";
 import userRouter from "./modules/users/user.controller";
 import cookieParser from "cookie-parser";
+import friendRouter from "./modules/friends/friends.controller";
 
 const app: express.Application = express();
 const port: number = Number(PORT);
@@ -174,6 +175,7 @@ const bootstrap = async () => {
   app.use("/auth", authRouter);
   app.use("/users", userRouter);
   app.use("/posts", postRouter);
+  app.use("/friends", friendRouter);
 
   app.use("{/*demo}", (req: Request, res: Response, next: NextFunction) => {
     throw new AppError(

@@ -15,7 +15,7 @@ export default function Layout() {
         {/* <AppNavbar /> */}
         <AppSidebar/>
       </div>
-      <div className="min-h-screen ml-24">
+      <div className="min-h-screen ml-24 pt-15">
         {/* <Toast className="fixed top-19 right-3 z-50 shadow-lg shadow-gray-900">
           <Detector
             render={({ online }) => (

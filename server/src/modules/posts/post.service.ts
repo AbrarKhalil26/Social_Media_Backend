@@ -120,10 +120,6 @@ class PostService {
             match: { commentId: { $exists: false } },
             populate: [{ path: "replies" }],
           },
-          {
-            path: "createdBy",
-            select: "firstName lastName profilePic",
-          },
         ],
         sort: { createdAt: -1 },
       },
@@ -133,7 +129,7 @@ class PostService {
   };
 
   getPost = async (req: Request, res: Response, next: NextFunction) => {
-    const {id} = req.params
+    const { id } = req.params;
     const posts = await this._postRepo.find({
       filter: { _id: id, $or: [...AvailabilityPost(req)] },
       options: {
@@ -142,10 +138,6 @@ class PostService {
             path: "comments",
             match: { commentId: { $exists: false } },
             populate: [{ path: "replies" }],
-          },
-          {
-            path: "createdBy",
-            select: "firstName lastName profilePic",
           },
         ],
         sort: { createdAt: -1 },
@@ -183,7 +175,7 @@ class PostService {
     }: UpdatePostDTO = req.body;
 
     const post = await this._postRepo.findOne({
-      filter: { _id: postId, createBy: req?.user?._id },
+      filter: { _id: postId, createdBy: req?.user?._id },
     });
     if (!post) throw new AppError("Post not found or not authorized");
 
@@ -242,11 +234,29 @@ class PostService {
         },
       });
     }
-    successResponse({ res, message: "Post updated successfully", data: post });
+
+    const updated = await this._postRepo.findOneAndUpdate({
+      filter: { _id: postId, createBy: req?.user?._id },
+      update: {
+        content,
+        tags: post.tags,
+        allowComments,
+        availability,
+        attachment: post.attachment,
+      },
+    });
+
+    successResponse({
+      res,
+      message: "Post updated successfully",
+      data: updated,
+    });
   };
 
   deletePost = async (req: Request, res: Response, next: NextFunction) => {
     const { postId } = req.params;
+    console.log(postId);
+
     const post = await this._postRepo.findOneAndDelete({
       filter: { _id: postId, createBy: req?.user?._id },
     });

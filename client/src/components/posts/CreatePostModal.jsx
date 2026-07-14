@@ -13,18 +13,19 @@ import { MdDelete } from "react-icons/md";
 import PostImagePreview from "./PostImagePreview";
 import { BASE_URL, PREFIX_USER } from "../../config/config";
 import { QUERY_KEYS } from "../../config/queryKeys";
-import { createPost } from "../../services/post.service";
-import { useCreatePost } from "../../hooks/mutations/useCreatePost";
+import { useCreateOrEditPost } from "../../hooks/mutations/post/useCreateOrEditPost";
 import EmojiPicker from "emoji-picker-react";
+import { useAuth } from "../../hooks/useAuth";
 
 export default function CreatePostModal({
+  data,
   availableCurrent,
   allowCommentCurrent,
-  setOpenModal
+  isEditing,
+  setOpenModal,
 }) {
-  const { userData } = useContext(AuthContext);
-  const token = localStorage.getItem("token");
-  const [preview, setPreview] = useState(null);
+  const { userData } = useAuth();
+  const [preview, setPreview] = useState(data?.attachment || null);
   const [openEmoji, setOpenEmoji] = useState(false);
   // const [emojiCurrent, setEmojiCurrent] = useState(null);
   const fileInputRef = useRef();
@@ -35,11 +36,13 @@ export default function CreatePostModal({
     formState: { isValid },
   } = useForm({ mode: "onChange" });
 
-  const { mutate, isPending } = useCreatePost({
+  const { mutate, isPending } = useCreateOrEditPost({
+    postId: data._id,
+    isEditing,
     reset,
     setPreview,
     fileInputRef,
-    setOpenModal
+    setOpenModal,
   });
   const onSubmit = (data) => {
     mutate({
@@ -76,16 +79,17 @@ export default function CreatePostModal({
           color="dark"
           theme={customTheme.textarea}
           {...register("content", { required: true })}
+          defaultValue={data?.content}
           placeholder="What do you want to talk about?"
         />
-        {preview && (
+        {preview?.length > 0 && (
           <PostImagePreview preview={preview} onRemove={handleRemoveImage} />
         )}
         <TextInput
           type="file"
-          ref={fileInputRef}
           className="hidden"
           onChange={handleFileChange}
+          ref={fileInputRef}
         />
         <div className="flex items-center gap-5 text-white">
           <IoMdImages

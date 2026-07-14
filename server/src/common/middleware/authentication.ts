@@ -25,6 +25,8 @@ export const decodedToken_and_fetchUser = async (authorization: string) => {
     token,
     ACCESS_SECRET_KEY,
   );
+  
+  
 
   return { user, decoded };
 };

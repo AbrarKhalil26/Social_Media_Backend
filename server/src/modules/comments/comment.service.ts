@@ -36,7 +36,7 @@ class CommentService {
       doc = await this._postRepo.findOne({
         filter: {
           _id: postId,
-          $and: [
+          $or: [
             { $or: [...AvailabilityPost(req)] },
             {
               $or: [
@@ -79,6 +79,7 @@ class CommentService {
         404,
       );
 
+    // Make tags --------------
     let mentions: Types.ObjectId[] = [];
     let fcmTokens: string[] = [];
     if (tags?.length) {
@@ -95,6 +96,8 @@ class CommentService {
         );
       }
     }
+
+    // Upload File ---------------
     let urls: string[] = [];
     let folderId = randomUUID();
     if (req.files?.length) {
@@ -104,6 +107,8 @@ class CommentService {
         store_type: Store_Enum.memory,
       });
     }
+
+    // Create Comment ---------------
     const comment = await this._commentRepo.create({
       content: content || "",
       attachments: urls,
@@ -117,6 +122,8 @@ class CommentService {
       await this._s3Service.deleteFiles(urls);
       throw new AppError("Failed to create comment");
     }
+
+    // Send Notification ---------------
     if (fcmTokens?.length) {
       await this._notificationService.sendNotifications({
         tokens: fcmTokens,

@@ -27,8 +27,8 @@ export const loginSchema = {
 };
 
 export const signUpSchema = {
-  body: loginSchema.body
-    .safeExtend({
+  body: z
+    .object({
       firstName: z.string({ error: "firstName is required" }).min(3).max(20),
       lastName: z.string({ error: "lastName is required" }).min(3).max(20),
       email: general_rule.emailField,

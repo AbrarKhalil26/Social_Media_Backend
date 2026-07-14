@@ -17,6 +17,7 @@ export interface IUser {
   address?: string;
   profilePic?: string;
   gender?: GenderEnum;
+  bio?: string;
   role?: RoleEnum;
   provider?: ProviderEnum;
   confirmed: boolean;
@@ -72,6 +73,10 @@ const userSchema = new mongoose.Schema<IUser>(
       type: String,
       enum: GenderEnum,
       default: GenderEnum.male,
+    },
+    bio:{
+      type: String,
+      max: 100,
     },
     role: {
       type: String,
@@ -138,6 +143,12 @@ userSchema
 //     this.setQuery({ ...rest, deletedAt: { $exists: false } });
 //   }
 // });
+
+userSchema.virtual("posts", {
+  ref: "Post",
+  localField: "_id",
+  foreignField: "createdBy",
+});
 
 const userModel =
   mongoose.models.User || mongoose.model<IUser>("User", userSchema);

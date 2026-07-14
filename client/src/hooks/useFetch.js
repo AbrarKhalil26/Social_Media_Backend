@@ -4,14 +4,14 @@ import { BASE_URL, PREFIX_USER } from "../config/config";
 import { AxiosInstance } from "../services/api";
 
 export default function useFetch({ queryKey, endPoint, options }) {
-  const token = localStorage.getItem("token");
   const { data, isLoading, isError, error } = useQuery({
     queryKey,
-    queryFn: () => getPostDetails(endPoint),
+    queryFn: () => Get(endPoint),
+    staleTime: 0,
     ...options,
   });
 
-  async function getPostDetails(endPoint) {
+  async function Get(endPoint) {
     try {
       const res = await AxiosInstance.get(endPoint);
       return res.data;

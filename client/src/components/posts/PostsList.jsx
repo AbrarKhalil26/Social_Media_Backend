@@ -11,7 +11,7 @@ export default function PostsList({ isProfile = true }) {
   const { userData } = useContext(AuthContext);
   const { token } = useAuth();
   // const queryKey = isProfile ? ["all-posts"] : ["user-posts"];
-  const queryKey = [QUERY_KEYS.USER_POSTS];
+  const queryKey = [QUERY_KEYS.ALL_POSTS];
 
   // const endPoint = `${
   //   isProfile ? `/posts/${userData?._id}` : `/posts`
@@ -20,7 +20,9 @@ export default function PostsList({ isProfile = true }) {
   const { data, isLoading, isError, error } = useFetch({
     queryKey,
     endPoint: "/posts",
-    options: { select: (data) => data.data },
+    options: {
+      select: (data) => data.data,
+    },
   });
   console.log(data);
 
@@ -29,7 +31,14 @@ export default function PostsList({ isProfile = true }) {
       <div className="flex flex-col gap-4">
         {isError && <p>Error: {error.message}</p>}
         {isLoading && <Loader />}
-        {data && data.map((post) => <PostItem key={post.id} post={post} />)}
+        {data?.length > 0 ? (
+          data && data.map((post) => <PostItem key={post.id} post={post} />)
+        ) : (
+          <p className="text-center">
+            Nothing here yet! Create a post or add friends to start exploring
+            more content.
+          </p>
+        )}
       </div>
     </div>
   );

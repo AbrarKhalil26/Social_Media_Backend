@@ -7,6 +7,7 @@ import {
   ListGroup,
   ListGroupItem,
 } from "flowbite-react";
+import { useAuth } from "../../hooks/useAuth";
 import { TbWorld } from "react-icons/tb";
 import { FaUserFriends } from "react-icons/fa";
 import { FiLock } from "react-icons/fi";
@@ -71,12 +72,12 @@ const SettingDropdown = ({
 };
 
 export default function CreatePostHeaderModal({
-  userData,
   availableCurrent,
   setAvailableCurrent,
   allowCommentCurrent,
   setAllowCommentCurrent,
 }) {
+  const { userData } = useAuth();
   const [openDropdown, setOpenDropdown] = useState(null);
 
   useEffect(() => {

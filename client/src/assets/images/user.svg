@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" version="1.1" viewBox="0 0 508 285.75">
+  <defs>
+    <linearGradient id="a" x1="555.62" x2="1058.3" y1="402.83" y2="138.25" gradientTransform="translate(103.92 13116)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#f2f2f2" offset="0"/>
+      <stop stop-color="#f2f2f2" offset="1"/>
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(-686.01 -13206)">
+    <rect
+      x="686.01"
+      y="13206"
+      width="508"
+      height="285.75"
+      fill="url(#a)"
+    />
+
+    <path
+      transform="scale(.26458)"
+      d="m3675.1 50200-238.37 287.05 66.02 66.016-150.92 36.537 84.9-102.55-217.64 262.08 242.58 242.58h1051.1v-308.09z"
+      fill-rule="evenodd"
+      fill="#C99700"
+      opacity=".1"
+    />
+
+    <!-- اللون الأصفر -->
+    <g fill="#e7c500">
+      <circle
+        cx="940.01"
+        cy="13319"
+        r="49.346"
+      />
+
+      <path
+        d="m940.01 13375a88.385 50.907 0 0 0-88.385 50.908 88.385 50.907 0 0 0 0.0948 1.542l176.59-0.596a88.385 50.907 0 0 0 0.071-0.812v-0.303a88.385 50.907 0 0 0-88.375-50.739z"
+      />
+    </g>
+  </g>
+</svg>

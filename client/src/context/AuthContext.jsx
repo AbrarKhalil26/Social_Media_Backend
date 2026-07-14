@@ -8,15 +8,19 @@ export default function CounterContextProvider({ children }) {
   const [token, setToken] = useState(null);
   const [verificationData, setVerificationData] = useState(null);
   const { data: userData } = useFetch({
-    queryKey: [QUERY_KEYS.USER_DATA],
+    queryKey: [
+      QUERY_KEYS.USER_DATA,
+      QUERY_KEYS.ALL_POSTS,
+      QUERY_KEYS.DETAILS_POSTS,
+    ],
     endPoint: "/users/profile",
     options: {
       enabled: !!token,
-      select: (data) => data.data.user,
+      select: (data) => data?.data?.user,
     },
   });
   console.log(userData);
-  
+
   useEffect(() => {
     if (localStorage.getItem("token")) {
       setToken(localStorage.getItem("token"));

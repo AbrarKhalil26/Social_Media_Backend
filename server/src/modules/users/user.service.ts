@@ -12,7 +12,7 @@ import { Types } from "mongoose";
 class UserService {
   private readonly _commentRepo = new CommentRepository();
   private readonly _postRepo = new PostRepository();
-  private readonly _userModel = new UserRepository();
+  private readonly _userRepo = new UserRepository();
   private readonly _s3Service = new S3Service();
   private readonly _redisService = redisService;
   private readonly _notificationService = notificationService;
@@ -22,37 +22,27 @@ class UserService {
   // -----------------------------
   getUser = async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params as { id: string };
-    const user = await this._userModel.findById(id);
+    console.log(id);
+    
+    const user = await this._userRepo.findOne({
+      filter: { _id: id },
+      options: { populate:[{path: "posts"}] },
+    });
     if (!user) throw new AppError("User not found.");
     successResponse({ res, data: user });
   };
 
   // -----------------------------
   getProfile = async (req: Request, res: Response, next: NextFunction) => {
-    const user = await this._userModel.findOne({
+    const user = await this._userRepo.findOne({
       filter: { _id: req.user._id as Types.ObjectId },
       options: { populate: [{ path: "friends" }] },
     });
     successResponse({ res, data: { user } });
   };
 
-  // -----------------------------
-  addFriends = async (req: Request, res: Response, next: NextFunction) => {
-    const { friendId } = req.body;
-    const friend = await this._userModel.findOne({
-      filter: { _id: friendId as Types.ObjectId },
-    });
-    if (!friend) throw new AppError("Friend not found", 404);
-    await this._userModel.findOneAndUpdate({
-      filter: { _id: req.user._id as Types.ObjectId },
-      update: { $addToSet: { friends: friendId as Types.ObjectId } },
-    });
-    await this._userModel.findOneAndUpdate({
-      filter: { _id: friendId as Types.ObjectId },
-      update: { $addToSet: { friends: req.user._id as Types.ObjectId } },
-    });
-    successResponse({ res, message: "Friend added successfully" });
-  };
+  
+ 
 }
 
 export default new UserService();

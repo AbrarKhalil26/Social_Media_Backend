@@ -11,3 +11,9 @@ export enum RoleEnum {
   admin = "admin",
   user = "user",
 }
+
+export enum FriendRequestEnum {
+  pending = "pending",
+  accepted = "accepted",
+  rejected = "rejected",
+}

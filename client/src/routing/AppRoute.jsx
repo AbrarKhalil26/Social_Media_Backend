@@ -11,6 +11,7 @@ import AuthLayout from "../layouts/AuthLayout";
 import VerifyEmail from "../pages/auth/VerifyEmail";
 import ForgetPassword from "../pages/auth/ForgetPassword";
 import ResetPassword from "../pages/auth/ResetPassword";
+import UserProfile from "../pages/user/UserProfile";
 
 const Posts = lazy(() => import("../pages/posts/Posts"));
 const Profile = lazy(() => import("../pages/auth/Profile"));
@@ -35,6 +36,16 @@ export const router = createBrowserRouter([
           <ProtectedRoutes>
             <Suspense fallback={<div>Loading...</div>}>
               <Posts />
+            </Suspense>
+          </ProtectedRoutes>
+        ),
+      },
+      {
+        path: "/users/:id",
+        element: (
+          <ProtectedRoutes>
+            <Suspense fallback={<div>Loading...</div>}>
+              <UserProfile />
             </Suspense>
           </ProtectedRoutes>
         ),

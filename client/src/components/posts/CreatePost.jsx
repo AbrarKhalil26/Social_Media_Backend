@@ -4,15 +4,16 @@ import { AuthContext } from "../../context/AuthContext";
 import ModalWrapper from "../shared/ModalWrapper";
 import CreatePostModal from "./CreatePostModal";
 import CreatePostHeaderModal from "./CreatePostHeaderModal";
+import { customTheme } from "../../lib/flowbiteTheme";
 
 export default function CreatePost() {
   const { userData } = useContext(AuthContext);
   const [openModal, setOpenModal] = useState(false);
   const [availableCurrent, setAvailableCurrent] = useState("public");
   const [allowCommentCurrent, setAllowCommentCurrent] = useState("allow");
-
+//  dark:bg-base dark:border-none shadow-[0px_0px_15px_-1px_var(--color-yellow-100),0px_0px_15px_5px_var(--color-neutral-800)
   return (
-    <Card className="dark:bg-base dark:border-none shadow-[0px_0px_15px_-1px_var(--color-yellow-100),0px_0px_15px_5px_var(--color-neutral-800)]">
+    <Card className="mb-7" theme={customTheme.card}>
       <div className="flex flex-col gap-4">
         <div className="mb-2 block">
           <Label htmlFor="Post" className="text-xl">
@@ -42,7 +43,6 @@ export default function CreatePost() {
             <ModalWrapper
               header={
                 <CreatePostHeaderModal
-                  userData={userData}
                   availableCurrent={availableCurrent}
                   setAvailableCurrent={setAvailableCurrent}
                   allowCommentCurrent={allowCommentCurrent}

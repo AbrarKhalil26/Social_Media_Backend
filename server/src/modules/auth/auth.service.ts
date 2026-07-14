@@ -21,7 +21,6 @@ import {
   ACCESS_SECRET_KEY_USER,
   CLIENT_ID,
   PREFIX_USER,
-  REFRESH_SECRET_KEY,
   REFRESH_SECRET_KEY_USER,
   SECRET_KEY,
 } from "../../config/config.service";
@@ -140,7 +139,7 @@ class UserService {
       throw new AppError("Please log in on system only", 400);
     }
 
-    const access_token = GenerateToken({
+    const access_token = this._tokenService.GenerateToken({
       payload: { id: user._id, email: user.email },
       secret_key: SECRET_KEY,
       options: { expiresIn: "1h" },
